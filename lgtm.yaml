@@ -1,0 +1,9 @@
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - cmake
+        - ninja-build 
+        - build-essential
+    after_prepare:
+      - build/install-bazel.sh
