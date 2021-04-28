@@ -5,5 +5,35 @@ extraction:
         - cmake
         - ninja-build 
         - build-essential
+        - wget
+        - pkg-config
+        - zip
+        - g++
+        - zlib1g-dev
+        - unzip
+        - python3
+        - git
+        - make
+        - ca-certificates-java
     after_prepare:
-      - build/install-bazel.sh
+      - curl -LO https://github.com/bazelbuild/bazel/releases/download/3.7.2/bazel-3.7.2-installer-linux-x86_64.sh
+      - chmod +x bazel-3.7.2-installer-linux-x86_64.sh
+      - ./bazel-3.7.2-installer-linux-x86_64.sh --user
+      - export PATH="$PATH:$HOME/bin"
+      # LGTM's server uses a MITM proxy: https://discuss.lgtm.com/t/598/14
+      - |-
+          $SEMMLE_JAVA_HOME/bin/keytool -importcert \
+                                        -trustcacerts \
+                                        -noprompt \
+                                        -file $NODE_EXTRA_CA_CERTS \
+                                        -alias bazel \
+                                        -keystore /tmp/bazel-keystore \
+                                        -storepass 6chars
+      - |-
+          echo startup \
+                --host_jvm_args=-Djavax.net.ssl.trustStore=/tmp/bazel-keystore \
+                --host_jvm_args=-Djavax.net.ssl.trustStorePassword=6chars \
+                > ~/.bazelrc 
+    index:
+      build_command:
+        - make build test
